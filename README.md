@@ -10,6 +10,7 @@ Cache Manager is a .NET 10 library for resolving named cache providers behind a 
 - Case-insensitive provider names.
 - Provider-scoped namespaces are applied internally to every key.
 - Safe Redis connection logging without exposing connection strings.
+- Lazy in-memory fallback provider when a configured provider is unavailable.
 
 ## Installation
 
@@ -108,14 +109,19 @@ public sealed class OrdersService(ICacheManager cacheManager)
 
 ## Primitive Values
 
-The generic API supports primitive values:
+The generic API supports reference types, structs, and primitive values:
 
 ```csharp
 cache.Set("metrics:count", 12);
 var count = cache.Get<int>("metrics:count");
 ```
 
-For value types, a miss returns `default(T)`. For example, a missing `int` returns `0`. If a caller must distinguish a miss from a real default value, add a higher-level key-existence check or extend the contract with a `TryGet`/result type.
+`Get<T>` and `GetAsync<T>` return `T?`. For reference types, a cache miss returns `null`.
+For value types, a miss returns `default(T)`. For example, a missing `int` returns `0`.
+
+`Set` and `SetAsync` ignore null values. This keeps the provider contract simple: a returned `null` for reference types means there was no cached value available.
+
+If a caller must distinguish a value-type miss from a real default value, add a higher-level key-existence check or extend the contract with a `TryGet`/result type.
 
 ## Provider Namespaces
 
@@ -155,7 +161,18 @@ The factory keeps a case-insensitive registry keyed by provider name:
 
 ## Fallback Behavior
 
-If a requested provider name does not exist, the manager attempts to resolve `Default`. If no valid default provider exists, it creates an in-memory fallback named `Default` with a 1440-minute expiration.
+If a requested provider name does not exist, or if a provider fails while being initialized, the manager returns an internal in-memory fallback provider.
+
+Fallback details:
+
+- The fallback is created lazily and reused for later fallback requests.
+- The fallback is named `Fallback`.
+- The fallback uses the `Fallback` namespace.
+- The fallback uses a 1440-minute expiration.
+- The fallback is not added to `ICacheProvidersCollection`.
+- The fallback is not cached under the missing or failed provider name.
+
+This means a provider can be added or fixed later with the same requested name, and the manager can create the real provider instead of reusing the fallback for that name.
 
 ## Notes
 
@@ -171,4 +188,4 @@ You may use it, redistribute complete and unmodified copies, and access its sour
 
 You may not modify it, distribute modified versions, or sell the Software as a whole as a standalone product without the prior express written permission of the rights' holder.
 
-See the `LICENSE` file for details.
+See the `License` file for details.

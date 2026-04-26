@@ -68,12 +68,20 @@ public class CacheManager : ICacheManager
         _fallbackProvider = new Lazy<ICacheProvider>(CreateFallbackProvider, LazyThreadSafetyMode.ExecutionAndPublication);
     }
 
-    /// Retrieves a cache provider by its name. If the provider is not already initialized,
-    /// it will create and register a new one based on the corresponding configuration settings.
+    /// <summary>
+    /// Retrieves a cache provider by its name.
+    /// </summary>
+    /// <remarks>
+    /// Configured providers are created lazily and cached by provider name using a case-insensitive lookup.
+    /// If the provider is missing or cannot be initialized, this method returns the internal fallback provider
+    /// without caching that fallback under the requested provider name.
+    /// </remarks>
     /// <param name="name">The unique name of the cache provider.</param>
-    /// <returns>An instance of the cache provider matching the specified name.</returns>
+    /// <returns>
+    /// An instance of the configured cache provider, or the internal fallback provider when the requested
+    /// provider is unavailable.
+    /// </returns>
     /// <exception cref="ArgumentException">Thrown when the cache provider name is null, empty, or consists only of whitespace.</exception>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown when the provider type is unsupported.</exception>
     public ICacheProvider GetCacheProvider(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -102,10 +110,9 @@ public class CacheManager : ICacheManager
         }
     }
 
-    /// Creates a specific cache provider instance based on the provided name.
-    /// Determines the appropriate cache provider type from the settings and initializes it.
-    /// If the requested provider does not exist or if an error occurs during initialization,
-    /// a fallback cache provider is returned.
+    /// <summary>
+    /// Creates a specific cache provider instance based on the provided settings.
+    /// </summary>
     /// <param name="setting">The settings used to create the cache provider.</param>
     /// <returns>An instance of the cache provider corresponding to the given name.</returns>
     /// <exception cref="ArgumentOutOfRangeException">Thrown if the cache provider type is unsupported.</exception>
@@ -119,11 +126,13 @@ public class CacheManager : ICacheManager
         };
     }
 
-    /// Provides a fallback cache provider for scenarios where a specified
-    /// cache provider is unavailable or encounters an error during initialization.
-    /// This method returns an in-memory cache provider with default settings.
-    /// Default settings include a provider type of memory, a name of "Default",
-    /// and an expiration time of 1440 minutes.
+    /// <summary>
+    /// Provides the lazy fallback cache provider for scenarios where a configured provider is unavailable.
+    /// </summary>
+    /// <remarks>
+    /// The fallback is an in-memory provider named <c>Fallback</c>, scoped to the <c>Fallback</c> namespace,
+    /// with a 1440-minute expiration.
+    /// </remarks>
     /// <returns>An instance of the in-memory cache provider configured as a fallback.</returns>
     private ICacheProvider GetFallBackProvider()
     {

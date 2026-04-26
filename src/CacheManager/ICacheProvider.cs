@@ -16,7 +16,10 @@ public interface ICacheProvider
     /// </summary>
     /// <typeparam name="T">The type of the value to be retrieved.</typeparam>
     /// <param name="key">The key of the cached value to retrieve.</param>
-    /// <returns>The value of type <typeparamref name="T"/> if the key exists; otherwise, null.</returns>
+    /// <returns>
+    /// The cached value when available; otherwise, <c>default</c> for <typeparamref name="T"/>.
+    /// Reference types return <c>null</c> on cache miss.
+    /// </returns>
     T? Get<T>(string key);
 
     /// <summary>
@@ -25,7 +28,11 @@ public interface ICacheProvider
     /// <typeparam name="T">The type of the item to retrieve.</typeparam>
     /// <param name="key">The key identifying the cached item.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
-    /// <returns>A task that represents the asynchronous operation. The task result contains the item of type <typeparamref name="T"/> retrieved from the cache, or null when the key does not exist.</returns>
+    /// <returns>
+    /// A task that represents the asynchronous operation. The task result contains the cached value when
+    /// available; otherwise, <c>default</c> for <typeparamref name="T"/>. Reference types return
+    /// <c>null</c> on cache miss.
+    /// </returns>
     Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -33,14 +40,15 @@ public interface ICacheProvider
     /// </summary>
     /// <typeparam name="T">The type of the value to be stored in the cache.</typeparam>
     /// <param name="key">The key associated with the value to store in the cache. The key must be a valid, non-empty string.</param>
-    /// <param name="value">The value to store in the cache. The value must be valid and non-null.</param>
+    /// <param name="value">The value to store in the cache. Null values are ignored by implementations.</param>
     void Set<T>(string key, T value);
 
     /// <summary>
     /// Asynchronously sets the specified value in the underlying data store with the given key.
     /// </summary>
+    /// <typeparam name="T">The type of the value to be stored in the cache.</typeparam>
     /// <param name="key">The unique identifier for the value to be set in the data store.</param>
-    /// <param name="value">The value to be stored associated with the specified key.</param>
+    /// <param name="value">The value to be stored associated with the specified key. Null values are ignored by implementations.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
     Task SetAsync<T>(string key, T value, CancellationToken cancellationToken = default);
@@ -69,9 +77,6 @@ public interface ICacheProvider
     /// Implementations scope cache entries by the provider namespace configured in
     /// <see cref="Settings.CacheProviderSettings.Namespace"/>.
     /// </remarks>
-    /// <exception cref="Exception">
-    /// Thrown when an error occurs during the cache clearing process.
-    /// </exception>
     void Clear();
 
     /// <summary>

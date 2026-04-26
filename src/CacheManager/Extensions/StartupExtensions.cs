@@ -53,7 +53,7 @@ public static class StartupExtensions
         if (cacheSettings.Providers == null || cacheSettings.Providers.Count == 0)
         {
             logger?.LogWarning("{logger} No cache providers configured", LoggerId);
-            logger?.LogWarning("{logger} Whole service will fall-back to Default In-Memory Cache", LoggerId);
+            logger?.LogWarning("{logger} Whole service will fall back to the internal in-memory fallback provider", LoggerId);
         }
 
         var validProviders = new List<CacheProviderSettings>();

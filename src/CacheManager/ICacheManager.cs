@@ -9,19 +9,23 @@ namespace CacheManager;
 /// </remarks>
 public interface ICacheManager
 {
+    /// <summary>
     /// Retrieves the cache provider associated with the specified name.
+    /// </summary>
+    /// <remarks>
+    /// If the requested provider is not configured, or if the configured provider cannot be initialized,
+    /// the implementation returns its internal fallback provider. The fallback is not registered in the
+    /// provider configuration collection and is not cached under the requested name.
+    /// </remarks>
     /// <param name="name">
     /// The name of the cache provider to retrieve. Must not be null, empty, or contain only whitespace.
     /// </param>
-    /// <returns>The cache provider instance associated with the specified name.</returns>
+    /// <returns>
+    /// The configured cache provider instance, or the internal fallback provider when the requested provider
+    /// is unavailable.
+    /// </returns>
     /// <exception cref="ArgumentException">
     /// Thrown when the provided name is null, empty, or contains only whitespace.
-    /// </exception>
-    /// <exception cref="KeyNotFoundException">
-    /// Thrown when no cache provider with the specified name is registered.
-    /// </exception>
-    /// <exception cref="ArgumentOutOfRangeException">
-    /// Thrown if the cache provider type is not supported.
     /// </exception>
     ICacheProvider GetCacheProvider(string name);
 }
