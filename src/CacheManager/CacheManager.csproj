@@ -1,0 +1,70 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <RootNamespace>CacheManager</RootNamespace>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <PackageId>CacheManager</PackageId>
+        <Version>1.0.0</Version>
+        <PackageVersion>1.0.0</PackageVersion>
+        <Title>Cache Manager</Title>
+        <Authors>Pixel Waffles</Authors>
+        <Description>A .NET 10 library for resolving named cache providers behind a common interface. It currently supports in-memory cache and multiple Redis providers.</Description>
+        <Copyright>Pixel Waffles</Copyright>
+        <PackageProjectUrl>https://github.com/pixel-waffless/cache-manager</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/pixel-waffless/cache-manager</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageTags>cache redis dotnet memory-cache redis-cache</PackageTags>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageLicenseUrl>LICENSE</PackageLicenseUrl>
+        <AssemblyVersion>1.0.0</AssemblyVersion>
+        <FileVersion>1.0.0</FileVersion>
+        <PackageIcon>icon.png</PackageIcon>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <DebugType>embedded</DebugType>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <DebugSymbols>true</DebugSymbols>
+      <DebugType>embedded</DebugType>
+    </PropertyGroup>
+
+    <!-- Include Readme file in the nuget -->
+    <ItemGroup>
+        <None Include="..\..\README.md">
+            <Pack>True</Pack>
+            <PackagePath>\</PackagePath>
+        </None>
+    </ItemGroup>
+
+    <!-- Include Licence file in the nuget -->
+    <ItemGroup>
+        <None Include="..\..\LICENCE">
+            <Pack>True</Pack>
+            <PackagePath>\</PackagePath>
+        </None>
+    </ItemGroup>
+
+    <!-- Include Readme file in the nuget -->
+    <ItemGroup>
+        <None Include="..\..\icon.png">
+            <Pack>True</Pack>
+            <PackagePath>\</PackagePath>
+        </None>
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.7" />
+      <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.7" />
+      <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.7" />
+      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.7" />
+      <PackageReference Include="Polly" Version="8.6.6" />
+      <PackageReference Include="StackExchange.Redis" Version="2.12.14" />
+    </ItemGroup>
+
+</Project>
