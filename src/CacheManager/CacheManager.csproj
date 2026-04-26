@@ -7,9 +7,9 @@
         <RootNamespace>CacheManager</RootNamespace>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
-        <PackageId>CacheManager</PackageId>
-        <Version>0.0.1</Version>
-        <PackageVersion>0.0.1</PackageVersion>
+        <PackageId>PixelWaffles.CacheManager</PackageId>
+        <Version>0.0.2</Version>
+        <PackageVersion>0.0.2</PackageVersion>
         <Title>Cache Manager</Title>
         <Authors>Pixel Waffles</Authors>
         <Description>A .NET 10 library for resolving named cache providers behind a common interface. It currently supports in-memory cache and multiple Redis providers.</Description>
@@ -20,8 +20,8 @@
         <PackageTags>cache redis dotnet memory-cache redis-cache</PackageTags>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageLicenseFile>License</PackageLicenseFile>
-        <AssemblyVersion>0.0.1</AssemblyVersion>
-        <FileVersion>0.0.1</FileVersion>
+        <AssemblyVersion>0.0.2</AssemblyVersion>
+        <FileVersion>0.0.2</FileVersion>
         <PackageIcon>icon.png</PackageIcon>
     </PropertyGroup>
 
