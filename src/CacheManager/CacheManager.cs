@@ -51,6 +51,7 @@ public class CacheManager : ICacheManager
     private readonly IServiceProvider _serviceProvider;
 
     private readonly ICacheProvidersCollection _cacheProvidersCollection;
+    private readonly Lazy<ICacheProvider> _fallbackProvider;
 
     /// Manages cache providers and their configurations.
     /// Provides functionality to retrieve specific cache providers
@@ -64,6 +65,7 @@ public class CacheManager : ICacheManager
         _serviceProvider = serviceProvider;
         _cacheProvidersCollection = cacheProvidersCollection;
         _cacheProviders = new ConcurrentDictionary<string, ICacheProvider>(StringComparer.OrdinalIgnoreCase);
+        _fallbackProvider = new Lazy<ICacheProvider>(CreateFallbackProvider, LazyThreadSafetyMode.ExecutionAndPublication);
     }
 
     /// Retrieves a cache provider by its name. If the provider is not already initialized,
@@ -74,42 +76,23 @@ public class CacheManager : ICacheManager
     /// <exception cref="ArgumentOutOfRangeException">Thrown when the provider type is unsupported.</exception>
     public ICacheProvider GetCacheProvider(string name)
     {
-        return string.IsNullOrWhiteSpace(name)
-            ? throw new ArgumentException("Cache provider name cannot be null or empty.", nameof(name))
-            : _cacheProviders.GetOrAdd(name, CreateCacheProvider);
-    }
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Cache provider name cannot be null or empty.", nameof(name));
 
-    /// Creates a specific cache provider instance based on the provided name.
-    /// Determines the appropriate cache provider type from the settings and initializes it.
-    /// If the requested provider does not exist or if an error occurs during initialization,
-    /// a fallback cache provider is returned.
-    /// <param name="name">The name of the cache provider to be created.</param>
-    /// <returns>An instance of the cache provider corresponding to the given name.</returns>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown if the cache provider type is unsupported.</exception>
-    private ICacheProvider CreateCacheProvider(string name)
-    {
+        if (_cacheProviders.TryGetValue(name, out var cacheProvider))
+            return cacheProvider;
+
         _cacheProvidersCollection.TryGetProvider(name, out var setting);
-
         if (setting == null)
         {
-            _logger.LogWarning("{logger} Cache provider '{name}' not found in configuration. Attempting to use 'Default' Cache.", LoggerId, name);
-
-            _cacheProvidersCollection.TryGetProvider("Default", out setting);
-            if (setting == null)
-            {
-                _logger.LogWarning("{logger} No valid cache providers configured. Using fallback.", LoggerId);
-                return GetFallBackProvider();
-            }
+            _logger.LogWarning("{logger} Cache provider '{name}' not found in configuration. Using fallback.", LoggerId, name);
+            return GetFallBackProvider();
         }
 
         try
         {
-            return setting.Type switch
-            {
-                ProviderType.Memory => GetInMemoryCacheProvider(setting),
-                ProviderType.Redis => GetRedisCacheProvider(setting),
-                _ => throw new ArgumentOutOfRangeException($"Unsupported cache provider type: {setting.Type}")
-            };
+            var createdProvider = CreateCacheProvider(setting);
+            return _cacheProviders.GetOrAdd(setting.Name, createdProvider);
         }
         catch (Exception e)
         {
@@ -117,6 +100,23 @@ public class CacheManager : ICacheManager
                 LoggerId, name, e.Message);
             return GetFallBackProvider();
         }
+    }
+
+    /// Creates a specific cache provider instance based on the provided name.
+    /// Determines the appropriate cache provider type from the settings and initializes it.
+    /// If the requested provider does not exist or if an error occurs during initialization,
+    /// a fallback cache provider is returned.
+    /// <param name="setting">The settings used to create the cache provider.</param>
+    /// <returns>An instance of the cache provider corresponding to the given name.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown if the cache provider type is unsupported.</exception>
+    private ICacheProvider CreateCacheProvider(CacheProviderSettings setting)
+    {
+        return setting.Type switch
+        {
+            ProviderType.Memory => GetInMemoryCacheProvider(setting),
+            ProviderType.Redis => GetRedisCacheProvider(setting),
+            _ => throw new ArgumentOutOfRangeException($"Unsupported cache provider type: {setting.Type}")
+        };
     }
 
     /// Provides a fallback cache provider for scenarios where a specified
@@ -127,20 +127,20 @@ public class CacheManager : ICacheManager
     /// <returns>An instance of the in-memory cache provider configured as a fallback.</returns>
     private ICacheProvider GetFallBackProvider()
     {
-        return _cacheProviders.GetOrAdd("Default", _ =>
+        return _fallbackProvider.Value;
+    }
+
+    private ICacheProvider CreateFallbackProvider()
+    {
+        var fallbackSettings = new CacheProviderSettings
         {
-            var fallbackSettings = new CacheProviderSettings
-            {
-                Name = "Default",
-                Type = ProviderType.Memory,
-                ExpirationMinutes = 1440
-            };
+            Name = "Fallback",
+            Namespace = "Fallback",
+            Type = ProviderType.Memory,
+            ExpirationMinutes = 1440
+        };
 
-            // Add a fallback provider to a cache providers collection
-            _cacheProvidersCollection.TryAddProvider("Default", fallbackSettings);
-
-            return GetInMemoryCacheProvider(fallbackSettings);
-        });
+        return GetInMemoryCacheProvider(fallbackSettings);
     }
 
     /// <summary>
